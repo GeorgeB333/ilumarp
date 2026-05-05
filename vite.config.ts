@@ -19,7 +19,7 @@ export default defineConfig({
   plugins: [
     tsConfigPaths(),
     tailwindcss(),
-    tanstackStart({ spa: { enabled: true } }),
+    tanstackStart({ spa: { enabled: true, prerender: { outputPath: "/index" } } }),
     viteReact(),
   ],
 });
