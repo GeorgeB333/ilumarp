@@ -14,6 +14,7 @@ import ytilumaImage from "@/assets/ytiluma.png";
 import ilumaBanner from "@/assets/ilumabanner.png";
 import imageBottom from "@/assets/imgaebottom.png";
 import imageMid from "@/assets/imagemid.png";
+import teaserBg from "@/assets/teaser-bg.png";
 
 // â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const WORD = "RAGE:MP";
@@ -122,7 +123,7 @@ function Glyph({
 
 // â”€â”€ CountdownUnit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CountdownUnit({ value, label }: { value: number; label: string }) {
-  const v = "?";
+  const v = String(value).padStart(2, "0");
   return (
     <div className="flex flex-col items-center">
       <div
@@ -163,7 +164,7 @@ export function TeaserPage() {
       {/* â”€â”€ Full-bleed background â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <img
-          src="/src/assets/teaser-bg.png"
+          src={teaserBg}
           alt=""
           aria-hidden="true"
           className="h-full w-full object-cover opacity-30"
