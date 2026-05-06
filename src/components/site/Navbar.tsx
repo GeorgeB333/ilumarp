@@ -16,22 +16,17 @@ export function Navbar() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+      className={`fixed inset-x-0 top-0 z-50 py-3 md:py-4 transition-[background-color,backdrop-filter] duration-300 ${
         scrolled
-          ? "py-3 backdrop-blur-md bg-gradient-to-b from-background/30 via-background/14 to-transparent"
-          : "py-5"
+          ? "backdrop-blur-md bg-background/60 md:bg-gradient-to-b md:from-background/30 md:via-background/14 md:to-transparent"
+          : "bg-transparent"
       }`}
+      style={{ willChange: "transform", transform: "translateZ(0)" }}
     >
-      <div
-        className={`mx-auto flex max-w-[1400px] items-center justify-between px-6 md:px-10 rounded-[1.4rem] transition-all duration-500 ${
-          scrolled
-            ? "bg-transparent px-4 py-2"
-            : "bg-transparent px-2 py-1"
-        }`}
-      >
-        <Logo size={42} className="opacity-90 hover:opacity-100 transition-opacity" />
+      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-3 sm:px-6 md:px-10">
+        <Logo size={38} className="opacity-90 hover:opacity-100 transition-opacity" />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <SocialButton
             href="https://www.tiktok.com/@illusioncommunity"
             label="TikTok"
@@ -79,26 +74,27 @@ function SocialButton({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="group relative h-[38px] w-[130px] overflow-hidden rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-500 hover:border-white/30 hover:bg-black/60"
+      aria-label={label}
+      className="group relative h-9 w-9 sm:h-[38px] sm:w-[130px] overflow-hidden rounded-full border border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-500 hover:border-white/30 hover:bg-black/60"
       style={{ "--brand": color } as React.CSSProperties}
     >
       {/* Moving color fill */}
       <div className="absolute inset-0 z-0 translate-x-[-100%] bg-[var(--brand)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0 opacity-90" />
 
       {/* Default State */}
-      <div className="relative z-10 flex h-full items-center justify-center transition-opacity duration-300 group-hover:opacity-0">
-        <div className="flex items-center gap-2 pl-2">
-          <div className="h-5 w-5 fill-[var(--brand)] drop-shadow-[0_0_8px_var(--brand)]">
+      <div className="relative z-10 flex h-full items-center justify-center sm:transition-opacity sm:duration-300 sm:group-hover:opacity-0">
+        <div className="flex items-center gap-2 sm:pl-2">
+          <div className="h-[18px] w-[18px] sm:h-5 sm:w-5 fill-[var(--brand)] drop-shadow-[0_0_8px_var(--brand)]">
             {icon}
           </div>
-          <span className="font-display text-[14px] font-bold tracking-[0.05em] uppercase text-white/90">
+          <span className="hidden sm:inline font-display text-[14px] font-bold tracking-[0.05em] uppercase text-white/90">
             {label}
           </span>
         </div>
       </div>
 
-      {/* Hover State - Sliding Animation */}
-      <div className="absolute inset-0 z-20 flex h-full items-center px-4 opacity-0 transition-all duration-500 group-hover:opacity-100">
+      {/* Hover State - Sliding Animation (desktop only) */}
+      <div className="absolute inset-0 z-20 hidden sm:flex h-full items-center px-4 opacity-0 transition-all duration-500 group-hover:opacity-100">
         <span className="font-display text-[14px] font-bold uppercase tracking-[0.05em] text-black translate-x-[-20px] transition-transform duration-500 delay-75 group-hover:translate-x-0">
           {action}
         </span>
