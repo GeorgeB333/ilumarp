@@ -21,11 +21,10 @@ export function Logo({ className = "", size = 44, showWordmark = true }: Props) 
       {showWordmark && (
         <div className="leading-none">
           <div
-            className="text-[22px] tracking-[0.12em] text-white"
+            className="text-[22px] tracking-[0.12em] text-gradient"
             style={{ fontFamily: "\"Tilt Warp\", var(--font-display)", fontWeight: 400 }}
           >
-            <span style={{ color: "#10FADF" }}>IL</span>
-            <span>UMA</span>
+            ILUMA
           </div>
           <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.4em] text-primary/70">
             Stay Tuned
