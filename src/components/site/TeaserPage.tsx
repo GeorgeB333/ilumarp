@@ -122,15 +122,20 @@ function Glyph({
 }
 
 // â”€â”€ CountdownUnit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function CountdownUnit({ value, label }: { value: number; label: string }) {
-  const v = String(value).padStart(2, "0");
+function CountdownUnit({ value, label, locked = false }: { value: number; label: string; locked?: boolean }) {
+  const display = locked ? "??" : String(value).padStart(2, "0");
+
   return (
     <div className="flex flex-col items-center">
       <div
-        className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground tabular-nums leading-none"
-        style={{ fontWeight: 700 }}
+        className="font-display text-4xl sm:text-5xl md:text-6xl tabular-nums leading-none select-none"
+        style={{
+          fontWeight: 700,
+          color: locked ? "rgba(16, 250, 223, 0.85)" : undefined,
+          filter: locked ? "drop-shadow(0 0 10px rgba(16, 250, 223, 0.4))" : undefined,
+        }}
       >
-        {v}
+        {display}
       </div>
       <div className="mt-2 font-display text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground" style={{ fontWeight: 400 }}>
         {label}
@@ -188,52 +193,64 @@ export function TeaserPage() {
           {/* Background characters */}
           <div className="absolute -right-32 -top-24 h-[600px] w-full pointer-events-none -z-10 hidden xl:block">
             <div className="relative h-full w-full pointer-events-none">
-              {/* Woman - Fully visible duo */}
-              <motion.img 
-                src={charWoman} 
-                alt="" 
-                animate={{ 
+              {/* Woman */}
+              <motion.img
+                src={charWoman}
+                alt=""
+                initial={{ opacity: 0, y: 60, filter: "blur(20px) drop-shadow(0 0 8px rgba(93, 146, 195, 0.16)) drop-shadow(0 0 20px rgba(93, 146, 195, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)" }}
+                animate={{
+                  opacity: 0.40,
+                  y: 0,
+                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(93, 146, 195, 0.16)) drop-shadow(0 0 20px rgba(93, 146, 195, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
                   scale: [1, 1.015, 1],
+                  rotate: [-0.8, 0.8, -0.8],
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.03,
                   opacity: 0.56,
                   filter: "drop-shadow(0 0 28px rgba(93, 146, 195, 0.42)) drop-shadow(0 0 54px rgba(93, 146, 195, 0.2)) brightness(1.12) saturate(1.16)",
                 }}
-                transition={{ 
-                  scale: { duration: 4.4, repeat: Infinity, ease: "easeInOut" },
-                  filter: { type: "spring", stiffness: 200, damping: 25 },
-                  opacity: { duration: 0.4 }
+                transition={{
+                  opacity: { duration: 1.1, delay: 0.9 },
+                  y: { duration: 1.3, delay: 0.9, ease: [0.22, 1, 0.36, 1] },
+                  filter: { duration: 1.1, delay: 0.9 },
+                  scale: { duration: 4.4, repeat: Infinity, ease: "easeInOut", delay: 2.2 },
+                  rotate: { duration: 4.4, repeat: Infinity, ease: "easeInOut", delay: 2.2 },
                 }}
-                className="absolute right-56 top-10 h-[95%] w-auto object-contain opacity-40 pointer-events-auto transition-all duration-700 z-10"
-                style={{ 
-                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(93, 146, 195, 0.16)) drop-shadow(0 0 20px rgba(93, 146, 195, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
+                className="absolute right-56 top-10 h-[95%] w-auto object-contain pointer-events-auto z-10"
+                style={{
                   maskImage:
                     "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.92) 12%, black 26%, black 68%, rgba(0,0,0,0.88) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 9%, black 24%, black 76%, rgba(0,0,0,0.9) 91%, transparent 100%)",
                   WebkitMaskImage:
                     "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.92) 12%, black 26%, black 68%, rgba(0,0,0,0.88) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 9%, black 24%, black 76%, rgba(0,0,0,0.9) 91%, transparent 100%)",
                 }}
               />
-              {/* Man - Fully visible duo */}
-              <motion.img 
-                src={charMan} 
-                alt="" 
-                animate={{ 
+              {/* Man */}
+              <motion.img
+                src={charMan}
+                alt=""
+                initial={{ opacity: 0, y: 60, filter: "blur(20px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.16)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)" }}
+                animate={{
+                  opacity: 0.40,
+                  y: 0,
+                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.16)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
                   scale: [1, 1.02, 1],
+                  rotate: [0.8, -0.8, 0.8],
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.03,
                   opacity: 0.56,
                   filter: "drop-shadow(0 0 28px rgba(89, 222, 191, 0.42)) drop-shadow(0 0 54px rgba(89, 222, 191, 0.2)) brightness(1.12) saturate(1.16)",
                 }}
-                transition={{ 
-                  scale: { duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.35 },
-                  filter: { type: "spring", stiffness: 200, damping: 25 },
-                  opacity: { duration: 0.4 }
+                transition={{
+                  opacity: { duration: 1.1, delay: 1.1 },
+                  y: { duration: 1.3, delay: 1.1, ease: [0.22, 1, 0.36, 1] },
+                  filter: { duration: 1.1, delay: 1.1 },
+                  scale: { duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 2.4 },
+                  rotate: { duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 2.4 },
                 }}
-                className="absolute right-0 top-0 h-[100%] w-auto object-contain opacity-40 pointer-events-auto transition-all duration-700 z-20"
-                style={{ 
-                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.16)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
+                className="absolute right-0 top-0 h-[100%] w-auto object-contain pointer-events-auto z-20"
+                style={{
                   maskImage:
                     "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.92) 12%, black 26%, black 68%, rgba(0,0,0,0.88) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.9) 9%, black 24%, black 76%, rgba(0,0,0,0.9) 91%, transparent 100%)",
                   WebkitMaskImage:
@@ -250,22 +267,26 @@ export function TeaserPage() {
             <RevealText as="span" className="block" immediate delay={0.45} stagger={0.07}>
               sa descoperi
             </RevealText>
-            <RevealText as="span" className="block" tokenClassName="text-gradient" immediate delay={0.7} stagger={0.07}>
-              proiectul ILUMA?
-            </RevealText>
+            <motion.span
+              className="block"
+              initial={{ opacity: 0, y: "0.4em", filter: "blur(10px)" }}
+              animate={{ opacity: 1, y: "0em", filter: "blur(0px)" }}
+              transition={{ delay: 0.7, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            >
+              proiectul <span className="text-gradient">ILUMA?</span>
+            </motion.span>
           </h1>
         </motion.div>
 
-        <RevealText
-          as="p"
-          immediate
-          delay={1.05}
-          stagger={0.025}
-          duration={0.8}
-          className="font-display text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl leading-snug mb-12 sm:mb-16 md:mb-24"
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.05, duration: 0.8 }}
+          className="font-display text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl leading-snug mb-6 sm:mb-8 md:mb-12"
         >
-          Decripteaza cuvintele de mai jos pentru a afla platforma pe care va fi lansat serverul si pregateste-te pentru primul contact cu orasul ILUMA.
-        </RevealText>
+          Decripteaza cuvintele de mai jos pentru a afla platforma pe care va fi lansat serverul si pregateste-te pentru primul contact cu orasul{" "}
+          <span className="text-gradient">ILUMA</span>.
+        </motion.p>
 
         {/* â”€â”€ Cipher Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <motion.section
@@ -276,7 +297,7 @@ export function TeaserPage() {
           className="relative"
         >
           {/* Terminal panel header */}
-          <RevealBlock className="mb-8 md:mb-12" amount={0.4}>
+          <RevealBlock className="mb-4 md:mb-8" amount={0.4}>
             <div>
               <div className="micro-label flex items-center gap-3 mb-4 text-primary uppercase">
                 <RevealText splitBy="char" stagger={0.02} duration={0.6}>
@@ -340,27 +361,28 @@ export function TeaserPage() {
                     src={imageMid}
                     alt=""
                     aria-hidden="true"
+                    initial={{ opacity: 0, y: 60, filter: "blur(20px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) contrast(0.99) brightness(1.01) saturate(1.04)" }}
                     animate={{
+                      opacity: 0.38,
+                      y: 0,
+                      filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
                       scale: [1, 1.016, 1],
-                      y: [0, -8, 0],
+                      rotate: [-0.8, 0.8, -0.8],
                     }}
                     whileHover={{
                       scale: 1.04,
                       opacity: 0.56,
-                      filter:
-                        "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
+                      filter: "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
                     }}
                     transition={{
-                      duration: 4.3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      filter: { type: "spring", stiffness: 200, damping: 25 },
-                      opacity: { duration: 0.35 },
+                      opacity: { duration: 1.1, delay: 0.5 },
+                      y: { duration: 1.3, delay: 0.5, ease: [0.22, 1, 0.36, 1] },
+                      filter: { duration: 1.1, delay: 0.5 },
+                      scale: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.8 },
+                      rotate: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.8 },
                     }}
-                    className="pointer-events-auto h-full w-full object-contain object-bottom opacity-38 transition-all duration-700"
+                    className="pointer-events-auto h-full w-full object-contain object-bottom"
                     style={{
-                      filter:
-                        "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
                       maskImage:
                         "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 10%, black 24%, black 70%, rgba(0,0,0,0.86) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.86) 10%, black 24%, black 76%, rgba(0,0,0,0.86) 90%, transparent 100%)",
                       WebkitMaskImage:
@@ -397,15 +419,27 @@ export function TeaserPage() {
                     </div>
                     <RevealBlock className="space-y-4 md:space-y-5 lg:col-span-8" amount={0.2} delay={0.15}>
                       <p className="text-sm sm:text-base leading-relaxed text-foreground/88">
-                        ILUMA Roleplay este construit ca o experienta cinematica de oras viu, iar mutarea pe
-                        <span className="text-primary"> Rage:MP</span> inseamna mai multa stabilitate, sisteme mai curate
-                        si mai mult loc pentru povesti care chiar conteaza.
+                        <span className="text-gradient">ILUMA</span> Roleplay este construit ca o experiență cinematografică de oraș viu, iar mutarea pe
+                        <span className="text-primary"> RAGE Multiplayer</span> înseamnă mai multă stabilitate, sisteme moderne
+                        și mai mult spațiu pentru povești care chiar contează.
                       </p>
                       <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
-                        Tot ce vezi aici este doar inceputul: economie persistenta, interactiuni gandite pentru roleplay
-                        serios si un univers pregatit sa creasca in jurul jucatorilor. Odata ce platforma a fost
-                        descoperita, urmatorul pas este simplu: pregateste-ti clientul, intra in server si lasa orasul sa
-                        te inghita.
+                        De aproape un an, echipa noastră dezvoltă un gamemode unic, creat pentru a aduce ceva nou comunității
+                        de roleplay din România. Accentul este pus pe realism, progres autentic și o comunitate matură, unde
+                        fiecare alegere și fiecare oră petrecută pe server au valoare.
+                      </p>
+                      <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
+                        Tot ce vezi aici este doar începutul: economie persistentă, interacțiuni gândite pentru roleplay
+                        serios și un univers pregătit să crească în jurul jucătorilor.{" "}
+                        <a
+                          href="https://discord.gg/iluma"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                        >
+                          Urmărește Discord-ul
+                        </a>{" "}
+                        pentru a afla data deschiderii serverului.
                       </p>
                     </RevealBlock>
                   </div>
@@ -423,7 +457,7 @@ export function TeaserPage() {
                         Timp de așteptare până la deschiderea serverului
                       </div>
                       <div className="flex items-end justify-center gap-3 sm:gap-6 md:gap-10">
-                        <CountdownUnit value={time.d} label="Zile" />
+                        <CountdownUnit value={time.d} label="Zile" locked />
                         <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
                         <CountdownUnit value={time.h} label="Ore" />
                         <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
@@ -511,24 +545,29 @@ function HowToPlay() {
           src={imageBottom}
           alt=""
           aria-hidden="true"
-          animate={{
+          initial={{ opacity: 0, y: 60, filter: "blur(20px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) contrast(0.99) brightness(1.01) saturate(1.04)" }}
+          whileInView={{
+            opacity: 0.42,
+            y: 0,
+            filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
             scale: [1, 1.018, 1],
+            rotate: [0.8, -0.8, 0.8],
           }}
+          viewport={{ once: true, amount: 0.15 }}
           whileHover={{
             scale: 1.045,
             opacity: 0.54,
             filter: "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
           }}
           transition={{
-            duration: 4.1,
-            repeat: Infinity,
-            ease: "easeInOut",
-            filter: { type: "spring", stiffness: 200, damping: 25 },
-            opacity: { duration: 0.35 },
+            opacity: { duration: 1.1, delay: 0.3 },
+            y: { duration: 1.3, delay: 0.3, ease: [0.22, 1, 0.36, 1] },
+            filter: { duration: 1.1, delay: 0.3 },
+            scale: { duration: 4.1, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
+            rotate: { duration: 4.1, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
           }}
-          className="pointer-events-auto h-full w-full object-contain object-bottom opacity-42 transition-all duration-700"
+          className="pointer-events-auto h-full w-full object-contain object-bottom"
           style={{
-            filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
             maskImage:
               "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 10%, black 24%, black 70%, rgba(0,0,0,0.86) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.86) 10%, black 24%, black 76%, rgba(0,0,0,0.86) 90%, transparent 100%)",
             WebkitMaskImage:
@@ -545,15 +584,10 @@ function HowToPlay() {
           <RevealText className="micro-label mb-3 block" splitBy="char" stagger={0.02} duration={0.6}>
             Ghid De Pornire
           </RevealText>
-          <RevealText
-            as="h2"
-            stagger={0.05}
-            duration={0.9}
-            delay={0.1}
-            className="font-display text-2xl sm:text-3xl md:text-5xl font-bold uppercase tracking-tight text-foreground"
-          >
-            Cum vei putea intra in oras
-          </RevealText>
+          <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold uppercase tracking-tight text-foreground">
+            Cum vei putea intra pe{" "}
+            <span className="text-gradient">ILUMA</span>
+          </h2>
           <RevealText
             as="p"
             stagger={0.02}
