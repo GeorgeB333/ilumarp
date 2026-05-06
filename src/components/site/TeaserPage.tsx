@@ -514,7 +514,7 @@ function HowToPlay() {
     {
       step: "Pasul 03",
       title: "Conecteaza-te",
-      text: "Porneste Rage:MP, cauta Los Santos Echoes in lista si alatura-te serverului.",
+      text: "Porneste Rage:MP, cauta Iluma Roleplay in lista si alatura-te serverului.",
       color: "121, 86, 154",
       image: ilumaBanner,
       layoutClassName: "lg:col-span-4 lg:row-span-1",

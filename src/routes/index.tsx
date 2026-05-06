@@ -8,15 +8,15 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "ILUMA — Something Is Coming" },
+      { title: "ILUMA — Stay Tuned" },
       {
         name: "description",
-        content: "A city with no rules. A story with no script. Decrypt the signal.",
+        content: "Soon on RAGE:MP",
       },
-      { property: "og:title", content: "ILUMA — Something Is Coming" },
+      { property: "og:title", content: "ILUMA — Stay Tuned" },
       {
         property: "og:description",
-        content: "Decrypt the signal. Find the platform. Enter the city.",
+        content: "Soon on RAGE:MP",
       },
     ],
   }),
