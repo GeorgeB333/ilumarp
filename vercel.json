@@ -3,6 +3,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/client",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/discord",
+      "destination": "https://discord.gg/iluma",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
