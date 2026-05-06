@@ -60,7 +60,7 @@ function Glyph({
       disabled={state === "locked"}
       aria-label={state === "revealed" ? `Litera ${char}` : "Simbol criptat"}
       className={`glyph-tile group relative flex flex-col items-center justify-center
-        h-24 w-20 md:h-36 md:w-28 lg:h-40 lg:w-32
+        h-20 w-14 sm:h-24 sm:w-20 md:h-36 md:w-28 lg:h-40 lg:w-32
         rounded-lg border transition-all duration-300
         ${
           state === "revealed"
@@ -95,7 +95,7 @@ function Glyph({
             initial={{ opacity: 0, y: -12, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-4xl md:text-5xl lg:text-6xl text-gradient"
+            className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-gradient"
             style={{ fontWeight: 700 }}
           >
             {char}
@@ -103,7 +103,7 @@ function Glyph({
         ) : (
           <motion.span
             key="n"
-            className={`font-mono text-xl md:text-2xl select-none ${
+            className={`font-mono text-base sm:text-xl md:text-2xl select-none ${
               state === "next" ? "text-primary" : "text-muted-foreground/30"
             }`}
           >
@@ -126,12 +126,12 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="font-display text-5xl md:text-6xl text-foreground tabular-nums leading-none"
+        className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground tabular-nums leading-none"
         style={{ fontWeight: 700 }}
       >
         {v}
       </div>
-      <div className="mt-2 font-display text-xs uppercase tracking-widest text-muted-foreground" style={{ fontWeight: 400 }}>
+      <div className="mt-2 font-display text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground" style={{ fontWeight: 400 }}>
         {label}
       </div>
     </div>
@@ -175,7 +175,7 @@ export function TeaserPage() {
       </div>
 
       {/* â”€â”€ Page content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 md:px-10 pt-40 pb-24">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10 pt-24 sm:pt-32 md:pt-40 pb-16 md:pb-24">
 
         {/* â”€â”€ Main Heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <motion.div
@@ -261,7 +261,7 @@ export function TeaserPage() {
           delay={1.05}
           stagger={0.025}
           duration={0.8}
-          className="font-display text-xl md:text-2xl text-muted-foreground max-w-xl leading-snug mb-24"
+          className="font-display text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl leading-snug mb-12 sm:mb-16 md:mb-24"
         >
           Decripteaza cuvintele de mai jos pentru a afla platforma pe care va fi lansat serverul si pregateste-te pentru primul contact cu orasul ILUMA.
         </RevealText>
@@ -275,7 +275,7 @@ export function TeaserPage() {
           className="relative"
         >
           {/* Terminal panel header */}
-          <RevealBlock className="mb-12" amount={0.4}>
+          <RevealBlock className="mb-8 md:mb-12" amount={0.4}>
             <div>
               <div className="micro-label flex items-center gap-3 mb-4 text-primary uppercase">
                 <RevealText splitBy="char" stagger={0.02} duration={0.6}>
@@ -287,7 +287,7 @@ export function TeaserPage() {
                 stagger={0.02}
                 duration={0.7}
                 delay={0.15}
-                className="font-display text-lg text-muted-foreground max-w-sm"
+                className="font-display text-sm sm:text-base md:text-lg text-muted-foreground max-w-sm"
               >
                 Apasa pe fiecare element disponibil in ordine pentru a decripta cuvantul si a afla platforma serverului.
               </RevealText>
@@ -295,17 +295,17 @@ export function TeaserPage() {
           </RevealBlock>
 
           {/* â”€â”€ Glyph grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-          <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 py-12">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 py-8 md:py-12">
             {slots.map((slot, i) => {
               if (slot.char === " ")
-                return <div key={i} className="w-6 md:w-12" />;
+                return <div key={i} className="w-3 sm:w-6 md:w-12" />;
               if (slot.char === ":")
                 return (
                   <div
                     key={i}
-                    className="flex h-24 w-6 select-none items-center justify-center md:h-36 md:w-8 lg:h-40 lg:w-10"
+                    className="flex h-20 w-4 select-none items-center justify-center sm:h-24 sm:w-6 md:h-36 md:w-8 lg:h-40 lg:w-10"
                   >
-                    <span className="font-display text-4xl text-primary/85 md:text-5xl lg:text-6xl">:</span>
+                    <span className="font-display text-3xl text-primary/85 sm:text-4xl md:text-5xl lg:text-6xl">:</span>
                   </div>
                 );
               const state =
@@ -332,7 +332,7 @@ export function TeaserPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                className="relative mt-24 w-full"
+                className="relative mt-16 md:mt-24 w-full"
               >
                 <div className="pointer-events-none absolute -left-[210px] top-[-270px] z-20 hidden h-[840px] w-[360px] xl:block">
                   <motion.img
@@ -371,21 +371,18 @@ export function TeaserPage() {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45, duration: 0.9 }}
-                  className="mx-auto mb-20 max-w-[1080px] rounded-[2rem] border border-border/50 bg-card/25 p-8 backdrop-blur-xl md:p-10"
+                  className="mx-auto mb-12 md:mb-20 max-w-[1080px] rounded-2xl md:rounded-[2rem] border border-border/50 bg-card/25 p-5 sm:p-8 backdrop-blur-xl md:p-10"
                 >
-                  <div className="grid gap-10 lg:grid-cols-12">
-                    <div className="lg:col-span-4">
-                      <div className="mb-4 inline-flex rounded-full bg-white/[0.02] px-4 py-2 text-[11px] uppercase tracking-[0.28em] text-primary/55 backdrop-blur-md">
-                        Platforma Descoperita
-                      </div>
+                  <div className="grid gap-6 md:gap-10 lg:grid-cols-12">
+                    <div className="lg:col-span-4 flex items-center justify-center lg:justify-start">
                       <h3
-                        className="font-display text-3xl uppercase tracking-tight text-foreground md:text-4xl"
+                        className="font-display text-2xl sm:text-3xl uppercase tracking-tight text-foreground md:text-4xl text-center lg:text-left"
                         style={{
                           textShadow: "0 0 18px rgba(16, 250, 223, 0.05)",
                         }}
                       >
                         <span className="bg-gradient-to-b from-white/92 via-white/86 to-white/58 bg-clip-text text-transparent">
-                          ILUMA intra pe
+                          ILUMA
                         </span>{" "}
                         <span
                           className="bg-gradient-to-b from-[#b8fff0]/80 via-[#10FADF]/88 to-[#65ffe5]/72 bg-clip-text text-transparent"
@@ -393,28 +390,17 @@ export function TeaserPage() {
                             filter: "drop-shadow(0 0 8px rgba(16, 250, 223, 0.1))",
                           }}
                         >
-                          RAGE
-                        </span>
-                        <span className="bg-gradient-to-b from-white/72 to-white/42 bg-clip-text text-transparent">
-                          :
-                        </span>
-                        <span
-                          className="bg-gradient-to-b from-[#b8fff0]/80 via-[#10FADF]/88 to-[#65ffe5]/72 bg-clip-text text-transparent"
-                          style={{
-                            filter: "drop-shadow(0 0 8px rgba(16, 250, 223, 0.1))",
-                          }}
-                        >
-                          MP
+                          RAGE:MP
                         </span>
                       </h3>
                     </div>
-                    <RevealBlock className="space-y-5 lg:col-span-8" amount={0.2} delay={0.15}>
-                      <p className="text-base leading-relaxed text-foreground/88">
+                    <RevealBlock className="space-y-4 md:space-y-5 lg:col-span-8" amount={0.2} delay={0.15}>
+                      <p className="text-sm sm:text-base leading-relaxed text-foreground/88">
                         ILUMA Roleplay este construit ca o experienta cinematica de oras viu, iar mutarea pe
                         <span className="text-primary"> Rage:MP</span> inseamna mai multa stabilitate, sisteme mai curate
                         si mai mult loc pentru povesti care chiar conteaza.
                       </p>
-                      <p className="text-sm leading-relaxed text-muted-foreground md:text-[15px]">
+                      <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
                         Tot ce vezi aici este doar inceputul: economie persistenta, interactiuni gandite pentru roleplay
                         serios si un univers pregatit sa creasca in jurul jucatorilor. Odata ce platforma a fost
                         descoperita, urmatorul pas este simplu: pregateste-ti clientul, intra in server si lasa orasul sa
@@ -428,20 +414,20 @@ export function TeaserPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55, duration: 0.9 }}
-                  className="mt-32 border-t border-border/50 pt-10"
+                  className="mt-16 md:mt-32 border-t border-border/50 pt-8 md:pt-10"
                 >
                   <div className="flex justify-center">
                     <div className="flex flex-col items-center text-center">
-                      <div className="font-display text-sm uppercase tracking-[0.25em] text-muted-foreground mb-6" style={{ fontWeight: 400 }}>
+                      <div className="font-display text-xs sm:text-sm uppercase tracking-[0.25em] text-muted-foreground mb-4 md:mb-6 px-4" style={{ fontWeight: 400 }}>
                         Timp de așteptare până la deschiderea serverului
                       </div>
-                      <div className="flex items-end justify-center gap-8 md:gap-10">
+                      <div className="flex items-end justify-center gap-3 sm:gap-6 md:gap-10">
                         <CountdownUnit value={time.d} label="Zile" />
-                        <span className="font-display text-3xl text-primary/30 pb-5">/</span>
+                        <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
                         <CountdownUnit value={time.h} label="Ore" />
-                        <span className="font-display text-3xl text-primary/30 pb-5">/</span>
+                        <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
                         <CountdownUnit value={time.m} label="Minute" />
-                        <span className="font-display text-3xl text-primary/30 pb-5 hidden md:block">/</span>
+                        <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
                         <CountdownUnit value={time.s} label="Secunde" />
                       </div>
                     </div>
@@ -518,7 +504,7 @@ function HowToPlay() {
   ];
 
   return (
-    <div className="relative w-full max-w-[1280px] mx-auto mt-20 px-4">
+    <div className="relative w-full max-w-[1280px] mx-auto mt-12 md:mt-20 px-2 sm:px-4">
       <div className="absolute right-[-60px] top-12 z-20 hidden h-[940px] w-[400px] xl:block pointer-events-none">
         <motion.img
           src={imageBottom}
@@ -563,7 +549,7 @@ function HowToPlay() {
             stagger={0.05}
             duration={0.9}
             delay={0.1}
-            className="font-display text-3xl md:text-5xl font-bold uppercase tracking-tight text-foreground"
+            className="font-display text-2xl sm:text-3xl md:text-5xl font-bold uppercase tracking-tight text-foreground"
           >
             Cum vei putea intra in oras
           </RevealText>
@@ -698,6 +684,19 @@ const cardStyles = `
     --rotate-y: 0deg;
     --pointer-x: 50%;
     --pointer-y: 50%;
+  }
+
+  @media (max-width: 767px) {
+    .parent { height: auto; min-height: 260px; }
+    .parent--wide { min-height: 280px; }
+    .parent--compact { min-height: 220px; }
+    .parent--tall { min-height: 380px; }
+    .parent--tall .media { height: 220px; }
+    .parent--tall .content { padding-top: 232px; }
+    .parent--wide .media { height: 158px; }
+    .parent--wide .content { padding-top: 172px; }
+    .parent--compact .media { height: 118px; }
+    .parent--compact .content { padding-top: 132px; }
   }
 
   .card {
