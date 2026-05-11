@@ -17,8 +17,8 @@ import imageMid from "@/assets/imagemid.png";
 import teaserBg from "@/assets/teaser-bg.png";
 
 // â”€â”€ Countdown logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// June 30, 2026 — 20:00 local
-const TARGET = new Date(2026, 5, 30, 20, 0, 0).getTime();
+// June 30, 2026 — fixed Bucharest date
+const TARGET = new Date("2026-06-30T00:00:00+03:00").getTime();
 function getParts(diff: number) {
   const c = Math.max(0, diff);
   return {
@@ -232,40 +232,41 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
     return () => obs.disconnect();
   }, [ready]);
 
-  // Unmute on first user gesture
-  useEffect(() => {
-    if (unmuted) return;
-    const activate = () => {
-      const p = playerRef.current;
-      if (!p?.unMute) return;
+  const handleUnmute = () => {
+    const p = playerRef.current;
+    if (!p?.unMute || unmutedRef.current) return;
+
+    try {
       p.unMute();
-      const vol = Math.round(getVolumeForProgress(scrollYProgress.get()));
+      const vol = Math.max(1, Math.round(getVolumeForProgress(scrollYProgress.get())));
       p.setVolume(vol);
       lastVolumeRef.current = vol;
       unmutedRef.current = true;
       setUnmuted(true);
+    } catch {}
+  };
+
+  // Activate sound on the first real user interaction anywhere on the page.
+  useEffect(() => {
+    if (!ready || unmutedRef.current) return;
+
+    const activate = () => {
+      handleUnmute();
     };
-    const opts: AddEventListenerOptions = { once: true, passive: true };
-    window.addEventListener("pointerdown", activate, opts);
-    window.addEventListener("keydown", activate, opts);
-    window.addEventListener("touchstart", activate, opts);
+
+    const passiveOnce: AddEventListenerOptions = { once: true, passive: true };
+    const once: AddEventListenerOptions = { once: true };
+
+    window.addEventListener("pointerdown", activate, passiveOnce);
+    window.addEventListener("touchstart", activate, passiveOnce);
+    window.addEventListener("keydown", activate, once);
+
     return () => {
       window.removeEventListener("pointerdown", activate);
-      window.removeEventListener("keydown", activate);
       window.removeEventListener("touchstart", activate);
+      window.removeEventListener("keydown", activate);
     };
-  }, [unmuted, ready, scrollYProgress]);
-
-  const handleUnmute = () => {
-    const p = playerRef.current;
-    if (!p?.unMute) return;
-    p.unMute();
-    const vol = Math.round(getVolumeForProgress(scrollYProgress.get()));
-    p.setVolume(vol);
-    lastVolumeRef.current = vol;
-    unmutedRef.current = true;
-    setUnmuted(true);
-  };
+  }, [ready]);
 
   return (
     <section
@@ -308,17 +309,34 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_30%,_rgba(0,0,0,0.55)_100%)]" />
           </motion.div>
 
-          {/* Unmute button */}
           {!unmuted && (
-            <button
+            <motion.button
+              type="button"
               onClick={handleUnmute}
-              className="absolute right-3 top-3 sm:right-5 sm:top-5 z-20 flex items-center gap-2 rounded-full border border-primary/40 bg-background/60 px-3 py-1.5 sm:px-4 sm:py-2 backdrop-blur-md font-mono text-[10px] sm:text-xs uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors"
-              aria-label="Activeaza sunetul"
+              initial={{ opacity: 0, y: -10, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.35, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute right-3 top-3 z-20 overflow-hidden rounded-2xl border border-primary/30 bg-background/45 p-1.5 shadow-[0_18px_40px_-24px_rgba(16,250,223,0.45)] backdrop-blur-xl sm:right-5 sm:top-5"
+              aria-label="Porneste muzica"
             >
-              <span aria-hidden>🔊</span>
-              <span className="hidden sm:inline">Activeaza sunetul</span>
-              <span className="sm:hidden">Sunet</span>
-            </button>
+              <span className="absolute inset-0 bg-[linear-gradient(135deg,rgba(16,250,223,0.15),transparent_55%)]" />
+              <span className="absolute inset-x-2 top-0 h-px bg-gradient-to-r from-transparent via-primary/75 to-transparent" />
+              <span className="relative flex items-center gap-3 rounded-[14px] border border-white/8 bg-black/15 px-3 py-2 text-left transition-colors hover:bg-primary/10 sm:px-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/12 text-primary">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden="true">
+                    <path d="M14 5.23v13.54a1 1 0 0 1-1.64.77L7.91 16H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h2.91l4.45-3.54A1 1 0 0 1 14 5.23Zm2.54 2.36a1 1 0 0 1 1.41 0 6.5 6.5 0 0 1 0 9.19 1 1 0 1 1-1.41-1.42 4.5 4.5 0 0 0 0-6.35 1 1 0 0 1 0-1.42Zm3.53-3.53a1 1 0 0 1 1.41 0 11.5 11.5 0 0 1 0 16.27 1 1 0 0 1-1.41-1.42 9.5 9.5 0 0 0 0-13.43 1 1 0 0 1 0-1.42Z" />
+                  </svg>
+                </span>
+                <span className="flex flex-col">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-primary/70">
+                    Audio Sync
+                  </span>
+                  <span className="font-display text-xs uppercase tracking-[0.12em] text-foreground sm:text-sm">
+                    Porneste muzica
+                  </span>
+                </span>
+              </span>
+            </motion.button>
           )}
 
           {/* Countdown card overlay — fades & slides up on scroll */}
