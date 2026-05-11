@@ -107,6 +107,7 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
   const scrollRef = useRef<HTMLDivElement>(null);
   const playerHostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
+  const pendingActivationRef = useRef(false);
   const unmutedRef = useRef(false);
   const lastVolumeRef = useRef(0);
   const [unmuted, setUnmuted] = useState(false);
@@ -155,6 +156,24 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
     }
   });
 
+  const attemptUnmute = () => {
+    const p = playerRef.current;
+    if (!p?.unMute || unmutedRef.current) return false;
+
+    try {
+      p.unMute();
+      const vol = Math.max(1, Math.round(getVolumeForProgress(scrollYProgress.get())));
+      p.setVolume(vol);
+      lastVolumeRef.current = vol;
+      unmutedRef.current = true;
+      pendingActivationRef.current = false;
+      setUnmuted(true);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -183,6 +202,11 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
             e.target.mute();
             e.target.playVideo();
             setReady(true);
+            if (pendingActivationRef.current) {
+              requestAnimationFrame(() => {
+                attemptUnmute();
+              });
+            }
           },
         },
       });
@@ -233,40 +257,29 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
   }, [ready]);
 
   const handleUnmute = () => {
-    const p = playerRef.current;
-    if (!p?.unMute || unmutedRef.current) return;
-
-    try {
-      p.unMute();
-      const vol = Math.max(1, Math.round(getVolumeForProgress(scrollYProgress.get())));
-      p.setVolume(vol);
-      lastVolumeRef.current = vol;
-      unmutedRef.current = true;
-      setUnmuted(true);
-    } catch {}
+    pendingActivationRef.current = true;
+    attemptUnmute();
   };
 
   // Activate sound on the first real user interaction anywhere on the page.
   useEffect(() => {
-    if (!ready || unmutedRef.current) return;
+    if (unmutedRef.current) return;
 
     const activate = () => {
-      handleUnmute();
+      pendingActivationRef.current = true;
+      attemptUnmute();
     };
 
-    const passiveOnce: AddEventListenerOptions = { once: true, passive: true };
-    const once: AddEventListenerOptions = { once: true };
-
-    window.addEventListener("pointerdown", activate, passiveOnce);
-    window.addEventListener("touchstart", activate, passiveOnce);
-    window.addEventListener("keydown", activate, once);
+    window.addEventListener("pointerdown", activate, { passive: true });
+    window.addEventListener("touchstart", activate, { passive: true });
+    window.addEventListener("keydown", activate);
 
     return () => {
       window.removeEventListener("pointerdown", activate);
       window.removeEventListener("touchstart", activate);
       window.removeEventListener("keydown", activate);
     };
-  }, [ready]);
+  }, [unmuted]);
 
   return (
     <section
