@@ -19,14 +19,22 @@ export function Logo({ className = "", size = 44, showWordmark = true }: Props) 
         />
       </div>
       {showWordmark && (
-        <div className="leading-none">
+        <div className="leading-none inline-flex flex-col items-stretch">
           <div
-            className="text-[22px] tracking-[0.12em] text-gradient"
-            style={{ fontFamily: "\"Tilt Warp\", var(--font-display)", fontWeight: 400 }}
+            className="text-[23px] text-gradient text-center"
+            style={{
+              fontFamily: "\"Tilt Warp\", var(--font-display)",
+              fontWeight: 400,
+              letterSpacing: "0.34em",
+              paddingLeft: "0.34em",
+            }}
           >
             ILUMA
           </div>
-          <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.4em] text-primary/70">
+          <div
+            className="mt-1.5 font-mono text-[11px] uppercase text-primary/75 text-center"
+            style={{ letterSpacing: "0.21em", paddingLeft: "0.21em" }}
+          >
             Stay Tuned
           </div>
         </div>

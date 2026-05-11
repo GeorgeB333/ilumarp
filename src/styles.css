@@ -28,8 +28,8 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
 
-  --font-display: "Oswald", "Space Grotesk", system-ui, sans-serif;
-  --font-sans: "Montserrat", "Inter", system-ui, sans-serif;
+  --font-display: "Oswald", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Roboto Mono", "JetBrains Mono", monospace;
 
   --animate-scan: scan 3s linear infinite;
@@ -81,12 +81,13 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; font-size: 17px; }
   body {
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-weight: 400;
+    font-weight: 500;
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -198,7 +199,7 @@
     padding: 0.85rem 1.6rem;
     border-radius: 10px;
     font-family: var(--font-display);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: none;
@@ -242,7 +243,7 @@
   .btn-cine:hover::after { transform: skewX(-45deg) scale(1, 1); }
   .btn-cine .btn-arrow {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 15px;
     flex-shrink: 0;
     transition: transform 0.5s cubic-bezier(0.22,1,0.36,1);
   }
@@ -266,7 +267,7 @@
     padding: 0.5rem 0.55rem 0.5rem 1rem;
     border-radius: 999px;
     font-family: var(--font-display);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.03em;
     color: #fff;
@@ -374,6 +375,29 @@
     text-transform: uppercase;
     color: var(--muted-foreground);
   }
+}
+
+/* Performance — disable heavy effects when user/device asks for it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto !important; }
+}
+
+/* Touch devices: skip 3D card tilt (perspective is expensive, no mouse to drive it) */
+@media (hover: none), (pointer: coarse) {
+  .parent { perspective: none !important; }
+  .card { transform: none !important; transition: box-shadow 0.25s ease, border-color 0.25s ease !important; }
+  .media, .content { transform: none !important; }
+}
+
+/* Very small viewports: trim hero to keep it readable without overflow */
+@media (max-width: 380px) {
+  .display-tight { letter-spacing: -0.03em; line-height: 0.95; }
 }
 
 @layer utilities {

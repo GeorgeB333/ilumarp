@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent, useSpring, type MotionValue } from "framer-motion";
 import { RevealText, RevealBlock } from "./RevealText";
+import { usePerformance } from "@/hooks/use-performance";
 
 import charMan from "@/assets/character1man.png";
 import charWoman from "@/assets/2character2female.png";
@@ -63,9 +64,9 @@ function CountdownUnit({ value, label, locked = false }: { value: number; label:
         {display}
       </div>
       <div
-        className="mt-2 font-display text-[10px] sm:text-xs uppercase tracking-widest"
+        className="mt-2 font-display text-[11px] sm:text-xs uppercase tracking-widest"
         style={{
-          fontWeight: 400,
+          fontWeight: 600,
           color: locked ? "rgba(16, 250, 223, 0.7)" : "var(--muted-foreground)",
           letterSpacing: locked ? "0.3em" : undefined,
         }}
@@ -104,6 +105,7 @@ declare global {
 }
 
 function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: number } }) {
+  const { lowEnd } = usePerformance();
   const scrollRef = useRef<HTMLDivElement>(null);
   const playerHostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
@@ -118,17 +120,20 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
     offset: ["start end", "end end"],
   });
   // Spring smoothing — natural feel both directions
-  const scrollYProgress = useSpring(rawProgress, {
+  const smoothed = useSpring(rawProgress, {
     stiffness: 110,
     damping: 28,
     mass: 0.45,
   });
   // Separate, slower spring for audio — keeps sound from cutting on quick scrolls
-  const audioProgress = useSpring(rawProgress, {
+  const audioSmoothed = useSpring(rawProgress, {
     stiffness: 35,
     damping: 26,
     mass: 1.1,
   });
+  // On low-end devices, bypass springs (skip per-frame RAF interpolation).
+  const scrollYProgress: MotionValue<number> = lowEnd ? rawProgress : smoothed;
+  const audioProgress: MotionValue<number> = lowEnd ? rawProgress : audioSmoothed;
 
   // 0.45 -> 0.8 : card expands smoothly to fullscreen (after section is fully in view)
   // Initial state: balanced inset on all sides
@@ -329,7 +334,7 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
               initial={{ opacity: 0, y: -10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.35, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute right-3 top-3 z-20 overflow-hidden rounded-2xl border border-primary/30 bg-background/45 p-1.5 shadow-[0_18px_40px_-24px_rgba(16,250,223,0.45)] backdrop-blur-xl sm:right-5 sm:top-5"
+              className="absolute right-3 top-3 z-20 overflow-hidden rounded-2xl border border-primary/30 bg-background/45 p-1.5 shadow-[0_18px_40px_-24px_rgba(16,250,223,0.45)] backdrop-blur-md sm:right-5 sm:top-5"
               aria-label="Porneste muzica"
             >
               <span className="absolute inset-0 bg-[linear-gradient(135deg,rgba(16,250,223,0.15),transparent_55%)]" />
@@ -361,7 +366,7 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
             }}
             className="absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6"
           >
-            <div className="relative w-full max-w-[720px] rounded-2xl border border-border/60 bg-background/40 px-5 py-7 sm:px-10 sm:py-10 md:px-14 md:py-12 backdrop-blur-2xl">
+            <div className={`relative w-full max-w-[720px] rounded-2xl border border-border/60 bg-background/40 px-5 py-7 sm:px-10 sm:py-10 md:px-14 md:py-12 ${lowEnd ? "bg-background/70" : "backdrop-blur-md"}`}>
               <span className="pointer-events-none absolute top-[8px] left-[8px] h-3 w-3 border-t border-l border-primary/70" />
               <span className="pointer-events-none absolute top-[8px] right-[8px] h-3 w-3 border-t border-r border-primary/70" />
               <span className="pointer-events-none absolute bottom-[8px] left-[8px] h-3 w-3 border-b border-l border-primary/70" />
@@ -369,8 +374,8 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
 
               <div className="text-center">
                 <div
-                  className="font-display text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.3em] text-primary/90 mb-4 md:mb-6"
-                  style={{ fontWeight: 400 }}
+                  className="font-display text-[11px] sm:text-xs md:text-sm uppercase tracking-[0.3em] text-primary/90 mb-4 md:mb-6"
+                  style={{ fontWeight: 600 }}
                 >
                   Cat mai e pana intram in oras
                 </div>
@@ -396,6 +401,7 @@ function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: 
 export function TeaserPage() {
   const [time, setTime] = useState(() => getParts(TARGET - Date.now()));
   const heroRef = useRef<HTMLElement>(null);
+  const { lowEnd } = usePerformance();
 
   useEffect(() => {
     const id = setInterval(() => setTime(getParts(TARGET - Date.now())), 1000);
@@ -448,7 +454,7 @@ export function TeaserPage() {
           className="mb-6 relative"
         >
           {/* Background characters */}
-          <div className="absolute -right-32 -top-24 h-[600px] w-full pointer-events-none -z-10 hidden xl:block">
+          <div className={`absolute -right-32 -top-24 h-[600px] w-full pointer-events-none -z-10 ${lowEnd ? "hidden" : "hidden xl:block"}`}>
             <div className="relative h-full w-full pointer-events-none">
               {/* Woman */}
               <motion.img
@@ -458,21 +464,17 @@ export function TeaserPage() {
                 animate={{
                   opacity: 0.40,
                   y: 0,
-                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(93, 146, 195, 0.16)) drop-shadow(0 0 20px rgba(93, 146, 195, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
-                  scale: [1, 1.015, 1],
-                  rotate: [-0.8, 0.8, -0.8],
+                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(93, 146, 195, 0.16))",
                 }}
                 whileHover={{
                   scale: 1.03,
                   opacity: 0.56,
-                  filter: "drop-shadow(0 0 28px rgba(93, 146, 195, 0.42)) drop-shadow(0 0 54px rgba(93, 146, 195, 0.2)) brightness(1.12) saturate(1.16)",
+                  filter: "drop-shadow(0 0 18px rgba(93, 146, 195, 0.35)) brightness(1.1)",
                 }}
                 transition={{
                   opacity: { duration: 1.1, delay: 0.9 },
                   y: { duration: 1.3, delay: 0.9, ease: [0.22, 1, 0.36, 1] },
                   filter: { duration: 1.1, delay: 0.9 },
-                  scale: { duration: 4.4, repeat: Infinity, ease: "easeInOut", delay: 2.2 },
-                  rotate: { duration: 4.4, repeat: Infinity, ease: "easeInOut", delay: 2.2 },
                 }}
                 className="absolute right-56 top-10 h-[95%] w-auto object-contain pointer-events-auto z-10"
                 style={{
@@ -490,21 +492,17 @@ export function TeaserPage() {
                 animate={{
                   opacity: 0.40,
                   y: 0,
-                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.16)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
-                  scale: [1, 1.02, 1],
-                  rotate: [0.8, -0.8, 0.8],
+                  filter: "blur(0.55px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.16))",
                 }}
                 whileHover={{
                   scale: 1.03,
                   opacity: 0.56,
-                  filter: "drop-shadow(0 0 28px rgba(89, 222, 191, 0.42)) drop-shadow(0 0 54px rgba(89, 222, 191, 0.2)) brightness(1.12) saturate(1.16)",
+                  filter: "drop-shadow(0 0 18px rgba(89, 222, 191, 0.35)) brightness(1.1)",
                 }}
                 transition={{
                   opacity: { duration: 1.1, delay: 1.1 },
                   y: { duration: 1.3, delay: 1.1, ease: [0.22, 1, 0.36, 1] },
                   filter: { duration: 1.1, delay: 1.1 },
-                  scale: { duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 2.4 },
-                  rotate: { duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 2.4 },
                 }}
                 className="absolute right-0 top-0 h-[100%] w-auto object-contain pointer-events-auto z-20"
                 style={{
@@ -552,7 +550,7 @@ export function TeaserPage() {
 
         {/* â”€â”€ Server Info + Guide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="relative w-full -mt-[24vh] md:-mt-[28vh] z-20">
-          <div className="pointer-events-none absolute -left-[210px] top-[-270px] z-20 hidden h-[840px] w-[360px] xl:block">
+          <div className={`pointer-events-none absolute -left-[210px] top-[-270px] z-20 hidden h-[840px] w-[360px] ${lowEnd ? "" : "xl:block"}`}>
             <motion.img
               src={imageMid}
               alt=""
@@ -561,22 +559,18 @@ export function TeaserPage() {
               whileInView={{
                 opacity: 0.38,
                 y: 0,
-                filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
-                scale: [1, 1.016, 1],
-                rotate: [-0.8, 0.8, -0.8],
+                filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15))",
               }}
               viewport={{ once: true, amount: 0.15 }}
               whileHover={{
                 scale: 1.04,
                 opacity: 0.56,
-                filter: "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
+                filter: "drop-shadow(0 0 16px rgba(89, 222, 191, 0.28)) brightness(1.1)",
               }}
               transition={{
                 opacity: { duration: 1.1, delay: 0.3 },
                 y: { duration: 1.3, delay: 0.3, ease: [0.22, 1, 0.36, 1] },
                 filter: { duration: 1.1, delay: 0.3 },
-                scale: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
-                rotate: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
               }}
               className="pointer-events-auto h-full w-full object-contain object-bottom"
               style={{
@@ -592,7 +586,7 @@ export function TeaserPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.9 }}
-            className="mx-auto mb-12 md:mb-20 max-w-[1080px] rounded-2xl md:rounded-[2rem] border border-border/50 bg-card/25 p-5 sm:p-8 backdrop-blur-xl md:p-10"
+            className="mx-auto mb-12 md:mb-20 max-w-[1080px] rounded-2xl md:rounded-[2rem] border border-border/50 bg-card/25 p-5 sm:p-8 backdrop-blur-md md:p-10"
           >
             <div className="grid gap-6 md:gap-10 lg:grid-cols-12">
               <div className="lg:col-span-4 flex items-center justify-center lg:justify-start">
@@ -658,6 +652,7 @@ export function TeaserPage() {
 
 // How to play section revealed after decryption
 function HowToPlay() {
+  const { lowEnd } = usePerformance();
   const steps = [
     {
       step: "Pasul 01",
@@ -712,7 +707,7 @@ function HowToPlay() {
 
   return (
     <div className="relative w-full max-w-[1280px] mx-auto mt-12 md:mt-20 px-2 sm:px-4">
-      <div className="absolute right-[-60px] top-12 z-20 hidden h-[940px] w-[400px] xl:block pointer-events-none">
+      <div className={`absolute right-[-60px] top-12 z-20 hidden h-[940px] w-[400px] pointer-events-none ${lowEnd ? "" : "xl:block"}`}>
         <motion.img
           src={imageBottom}
           alt=""
@@ -721,22 +716,18 @@ function HowToPlay() {
           whileInView={{
             opacity: 0.42,
             y: 0,
-            filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
-            scale: [1, 1.018, 1],
-            rotate: [0.8, -0.8, 0.8],
+            filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15))",
           }}
           viewport={{ once: true, amount: 0.15 }}
           whileHover={{
             scale: 1.045,
             opacity: 0.54,
-            filter: "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
+            filter: "drop-shadow(0 0 16px rgba(89, 222, 191, 0.28)) brightness(1.1)",
           }}
           transition={{
             opacity: { duration: 1.1, delay: 0.3 },
             y: { duration: 1.3, delay: 0.3, ease: [0.22, 1, 0.36, 1] },
             filter: { duration: 1.1, delay: 0.3 },
-            scale: { duration: 4.1, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
-            rotate: { duration: 4.1, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
           }}
           className="pointer-events-auto h-full w-full object-contain object-bottom"
           style={{
@@ -862,7 +853,7 @@ function InteractiveCard({
         className={`card ${href ? "card--interactive" : ""}`}
       >
         <div className="media">
-          <img src={image} alt={title} className={`media-image ${imageClassName ?? ""}`.trim()} />
+          <img src={image} alt={title} loading="lazy" decoding="async" className={`media-image ${imageClassName ?? ""}`.trim()} />
           <div className="media-overlay" />
         </div>
         <div className="content">
@@ -997,8 +988,9 @@ const cardStyles = `
   }
 
   .card-kicker {
-    color: rgba(225, 233, 245, 0.72);
-    font-size: 10px;
+    color: rgba(225, 233, 245, 0.78);
+    font-size: 11px;
+    font-weight: 600;
     font-family: var(--font-mono);
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -1012,7 +1004,7 @@ const cardStyles = `
     display: block;
     color: rgba(255, 255, 255, 0.99);
     font-weight: 800;
-    font-size: 24px;
+    font-size: 25px;
     line-height: 0.98;
     font-family: var(--font-display);
     text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
@@ -1022,7 +1014,7 @@ const cardStyles = `
     flex-shrink: 0;
     color: rgba(255, 255, 255, 0.9);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -1030,8 +1022,9 @@ const cardStyles = `
 
   .content .text {
     display: block;
-    color: rgba(229, 236, 248, 0.78);
-    font-size: 13px;
+    color: rgba(229, 236, 248, 0.84);
+    font-size: 14px;
+    font-weight: 500;
     line-height: 1.55;
     margin-top: 10px;
     max-width: 34ch;
@@ -1054,7 +1047,7 @@ const cardStyles = `
   }
 
   .parent--compact .content .title {
-    font-size: 19px;
+    font-size: 20px;
   }
 
   .parent--compact .card-topline {
@@ -1062,7 +1055,7 @@ const cardStyles = `
   }
 
   .parent--compact .content .text {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     margin-top: 6px;
   }
@@ -1076,11 +1069,11 @@ const cardStyles = `
   }
 
   .parent--tall .content .title {
-    font-size: 28px;
+    font-size: 29px;
   }
 
   .parent--tall .content .text {
-    font-size: 13px;
+    font-size: 14px;
     max-width: 38ch;
   }
 
