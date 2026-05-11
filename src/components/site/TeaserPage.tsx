@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from "react";
-import { motion, AnimatePresence, useTransform, useMotionValue } from "framer-motion";
+﻿import { useState, useEffect, useRef } from "react";
+import { motion, useScroll, useTransform, useMotionValueEvent, useSpring } from "framer-motion";
 import { RevealText, RevealBlock } from "./RevealText";
 
 import charMan from "@/assets/character1man.png";
@@ -16,14 +16,9 @@ import imageBottom from "@/assets/imgaebottom.png";
 import imageMid from "@/assets/imagemid.png";
 import teaserBg from "@/assets/teaser-bg.png";
 
-// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const WORD = "RAGE:MP";
-const SLOTS = WORD.split("");
-const NOISE = "â–ˆâ–“â–’â–‘#@%&*?!+=/\\<>~^";
-const TOTAL_CHARS = SLOTS.filter((c) => c !== " " && c !== ":").length;
-
 // â”€â”€ Countdown logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const TARGET = Date.now() + 27 * 24 * 60 * 60 * 1000 + 14 * 3600 * 1000;
+// June 30, 2026 — 20:00 local
+const TARGET = new Date(2026, 5, 30, 20, 0, 0).getTime();
 function getParts(diff: number) {
   const c = Math.max(0, diff);
   return {
@@ -34,135 +29,355 @@ function getParts(diff: number) {
   };
 }
 
-// â”€â”€ Glyph tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function Glyph({
-  char,
-  state,
-  onClick,
-}: {
-  char: string;
-  state: "locked" | "next" | "revealed";
-  onClick: () => void;
-}) {
-  const [noise, setNoise] = useState(NOISE[0]);
+// â”€â”€ CountdownUnit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const SCRAMBLE_CHARS = "0123456789#@%&*/?!+=";
+
+function CountdownUnit({ value, label, locked = false }: { value: number; label: string; locked?: boolean }) {
+  const [scramble, setScramble] = useState("??");
 
   useEffect(() => {
-    if (state === "revealed") return;
-    const id = setInterval(
-      () => setNoise(NOISE[Math.floor(Math.random() * NOISE.length)]),
-      state === "next" ? 60 : 220,
-    );
+    if (!locked) return;
+    const id = setInterval(() => {
+      const a = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+      const b = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+      setScramble(a + b);
+    }, 90);
     return () => clearInterval(id);
-  }, [state]);
+  }, [locked]);
 
-  return (
-    <button
-      onClick={onClick}
-      disabled={state === "locked"}
-      aria-label={state === "revealed" ? `Litera ${char}` : "Simbol criptat"}
-      className={`glyph-tile group relative flex flex-col items-center justify-center
-        h-20 w-14 sm:h-24 sm:w-20 md:h-36 md:w-28 lg:h-40 lg:w-32
-        rounded-lg border transition-all duration-300
-        ${
-          state === "revealed"
-            ? "border-primary bg-primary/10 text-primary"
-            : state === "next"
-              ? "border-primary/50 bg-card/80 cursor-pointer hover:border-primary hover:bg-primary/20 hover:-translate-y-1"
-              : "border-border/40 bg-card/40 cursor-not-allowed opacity-50"
-        }`}
-    >
-      {/* Corner brackets for unlocked tiles */}
-      {state !== "locked" && (
-        <>
-          <span className="absolute top-[5px] left-[5px] h-2.5 w-2.5 border-t border-l border-primary/80" />
-          <span className="absolute top-[5px] right-[5px] h-2.5 w-2.5 border-t border-r border-primary/80" />
-          <span className="absolute bottom-[5px] left-[5px] h-2.5 w-2.5 border-b border-l border-primary/80" />
-          <span className="absolute bottom-[5px] right-[5px] h-2.5 w-2.5 border-b border-r border-primary/80" />
-        </>
-      )}
-
-      {/* Scanline sweep on "next" */}
-      {state === "next" && (
-        <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
-          <span className="absolute inset-x-0 h-px bg-primary/50 animate-scan" />
-        </span>
-      )}
-
-      {/* Glyph character */}
-      <AnimatePresence mode="wait">
-        {state === "revealed" ? (
-          <motion.span
-            key="r"
-            initial={{ opacity: 0, y: -12, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-gradient"
-            style={{ fontWeight: 700 }}
-          >
-            {char}
-          </motion.span>
-        ) : (
-          <motion.span
-            key="n"
-            className={`font-mono text-base sm:text-xl md:text-2xl select-none ${
-              state === "next" ? "text-primary" : "text-muted-foreground/30"
-            }`}
-          >
-            {noise}
-          </motion.span>
-        )}
-      </AnimatePresence>
-
-      {/* State badge */}
-      <span className="absolute -bottom-6 left-0 right-0 text-center font-mono text-[8px] tracking-widest text-muted-foreground/60 uppercase">
-        {state === "revealed" ? "DECRIPTAT" : state === "next" ? "[APASÄ‚]" : "BLOCAT"}
-      </span>
-    </button>
-  );
-}
-
-// â”€â”€ CountdownUnit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function CountdownUnit({ value, label, locked = false }: { value: number; label: string; locked?: boolean }) {
-  const display = locked ? "??" : String(value).padStart(2, "0");
+  const display = locked ? scramble : String(value).padStart(2, "0");
 
   return (
     <div className="flex flex-col items-center">
       <div
-        className="font-display text-4xl sm:text-5xl md:text-6xl tabular-nums leading-none select-none"
+        className="font-display text-4xl sm:text-5xl md:text-6xl tabular-nums leading-none select-none relative"
         style={{
           fontWeight: 700,
-          color: locked ? "rgba(16, 250, 223, 0.85)" : undefined,
-          filter: locked ? "drop-shadow(0 0 10px rgba(16, 250, 223, 0.4))" : undefined,
+          color: locked ? "rgba(16, 250, 223, 0.95)" : undefined,
+          filter: locked
+            ? "drop-shadow(0 0 12px rgba(16, 250, 223, 0.55)) drop-shadow(0 0 28px rgba(16, 250, 223, 0.2))"
+            : undefined,
+          fontFamily: locked ? "var(--font-mono)" : undefined,
         }}
       >
         {display}
       </div>
-      <div className="mt-2 font-display text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground" style={{ fontWeight: 400 }}>
-        {label}
+      <div
+        className="mt-2 font-display text-[10px] sm:text-xs uppercase tracking-widest"
+        style={{
+          fontWeight: 400,
+          color: locked ? "rgba(16, 250, 223, 0.7)" : "var(--muted-foreground)",
+          letterSpacing: locked ? "0.3em" : undefined,
+        }}
+      >
+        {locked ? `[${label}]` : label}
       </div>
     </div>
   );
 }
 
+// â”€â”€ Video + Countdown overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const YT_VIDEO_ID = "ik3-B39EWN0";
+const YT_START = 1;
+const PEAK_VOLUME = 20;
+
+// Smoothstep easing for cinematic audio fades
+function smoothstep(edge0: number, edge1: number, x: number) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function getVolumeForProgress(p: number) {
+  const pc = Math.max(0, Math.min(1, p));
+  // Fade in: 0.3 -> 0.7 (gentle rise starting before fullscreen)
+  const fadeIn = smoothstep(0.3, 0.7, pc);
+  // Fade out: 0.75 -> 1 (long graceful tail)
+  const fadeOut = 1 - smoothstep(0.75, 1, pc);
+  return PEAK_VOLUME * fadeIn * fadeOut;
+}
+
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: (() => void) | undefined;
+  }
+}
+
+function VideoCountdown({ time }: { time: { d: number; h: number; m: number; s: number } }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const playerHostRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const unmutedRef = useRef(false);
+  const lastVolumeRef = useRef(0);
+  const [unmuted, setUnmuted] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const { scrollYProgress: rawProgress } = useScroll({
+    target: scrollRef,
+    offset: ["start end", "end end"],
+  });
+  // Spring smoothing — natural feel both directions
+  const scrollYProgress = useSpring(rawProgress, {
+    stiffness: 110,
+    damping: 28,
+    mass: 0.45,
+  });
+  // Separate, slower spring for audio — keeps sound from cutting on quick scrolls
+  const audioProgress = useSpring(rawProgress, {
+    stiffness: 35,
+    damping: 26,
+    mass: 1.1,
+  });
+
+  // 0.45 -> 0.8 : card expands smoothly to fullscreen (after section is fully in view)
+  // Initial state: balanced inset on all sides
+  const top = useTransform(scrollYProgress, [0.4, 0.8], ["12vh", "0vh"]);
+  const bottom = useTransform(scrollYProgress, [0.4, 0.8], ["12vh", "0vh"]);
+  const left = useTransform(scrollYProgress, [0.4, 0.8], ["9vw", "0vw"]);
+  const right = useTransform(scrollYProgress, [0.4, 0.8], ["9vw", "0vw"]);
+  const borderRadius = useTransform(scrollYProgress, [0.4, 0.8], ["28px", "0px"]);
+  const borderOpacity = useTransform(scrollYProgress, [0.4, 0.8], [0.5, 0]);
+  const overlayOpacity = useTransform(scrollYProgress, [0.4, 0.8], [1, 0.35]);
+  const countdownOpacity = useTransform(scrollYProgress, [0.4, 0.6, 0.78], [1, 0.5, 0]);
+  const countdownY = useTransform(scrollYProgress, [0.4, 0.78], [0, -120]);
+  const countdownScale = useTransform(scrollYProgress, [0.4, 0.78], [1, 0.92]);
+  // 0.9 -> 1 : video slides up and fades out
+  const videoOpacity = useTransform(scrollYProgress, [0.9, 1], [1, 0]);
+  const videoY = useTransform(scrollYProgress, [0.9, 1], ["0vh", "-8vh"]);
+
+  // Sound fade tied to scroll (slow spring — graceful, doesn't cut on fast scrolls)
+  useMotionValueEvent(audioProgress, "change", (p) => {
+    if (!unmutedRef.current || !playerRef.current?.setVolume) return;
+    const vol = Math.round(getVolumeForProgress(p));
+    if (vol !== lastVolumeRef.current) {
+      playerRef.current.setVolume(vol);
+      lastVolumeRef.current = vol;
+    }
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const init = () => {
+      if (cancelled || !playerHostRef.current || !window.YT?.Player) return;
+      playerRef.current = new window.YT.Player(playerHostRef.current, {
+        width: "100%",
+        height: "100%",
+        videoId: YT_VIDEO_ID,
+        playerVars: {
+          autoplay: 1,
+          mute: 1,
+          controls: 0,
+          loop: 1,
+          playlist: YT_VIDEO_ID,
+          start: YT_START,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          disablekb: 1,
+          iv_load_policy: 3,
+          fs: 0,
+        },
+        events: {
+          onReady: (e: any) => {
+            e.target.mute();
+            e.target.playVideo();
+            setReady(true);
+          },
+        },
+      });
+    };
+
+    if (window.YT?.Player) {
+      init();
+    } else {
+      const existing = document.querySelector('script[data-yt-iframe-api]');
+      if (!existing) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        tag.setAttribute("data-yt-iframe-api", "true");
+        document.body.appendChild(tag);
+      }
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        init();
+      };
+    }
+
+    return () => {
+      cancelled = true;
+      try {
+        playerRef.current?.destroy?.();
+      } catch {}
+    };
+  }, []);
+
+  // Pause when scrolled out of view
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        const p = playerRef.current;
+        if (!p?.playVideo) return;
+        if (entry.isIntersecting) {
+          p.playVideo();
+        } else {
+          p.pauseVideo();
+        }
+      },
+      { threshold: 0 },
+    );
+    obs.observe(scrollRef.current);
+    return () => obs.disconnect();
+  }, [ready]);
+
+  // Unmute on first user gesture
+  useEffect(() => {
+    if (unmuted) return;
+    const activate = () => {
+      const p = playerRef.current;
+      if (!p?.unMute) return;
+      p.unMute();
+      const vol = Math.round(getVolumeForProgress(scrollYProgress.get()));
+      p.setVolume(vol);
+      lastVolumeRef.current = vol;
+      unmutedRef.current = true;
+      setUnmuted(true);
+    };
+    const opts: AddEventListenerOptions = { once: true, passive: true };
+    window.addEventListener("pointerdown", activate, opts);
+    window.addEventListener("keydown", activate, opts);
+    window.addEventListener("touchstart", activate, opts);
+    return () => {
+      window.removeEventListener("pointerdown", activate);
+      window.removeEventListener("keydown", activate);
+      window.removeEventListener("touchstart", activate);
+    };
+  }, [unmuted, ready, scrollYProgress]);
+
+  const handleUnmute = () => {
+    const p = playerRef.current;
+    if (!p?.unMute) return;
+    p.unMute();
+    const vol = Math.round(getVolumeForProgress(scrollYProgress.get()));
+    p.setVolume(vol);
+    lastVolumeRef.current = vol;
+    unmutedRef.current = true;
+    setUnmuted(true);
+  };
+
+  return (
+    <section
+      ref={scrollRef}
+      className="relative h-[140vh] left-1/2 -translate-x-1/2 w-screen"
+    >
+      <div className="sticky top-0 h-screen w-screen overflow-hidden">
+        <motion.div
+          style={{
+            top,
+            bottom,
+            left,
+            right,
+            borderRadius,
+            opacity: videoOpacity,
+            y: videoY,
+          }}
+          className="absolute overflow-hidden bg-black shadow-[0_30px_120px_-40px_rgba(16,250,223,0.25)]"
+        >
+          {/* Animated border */}
+          <motion.div
+            style={{ opacity: borderOpacity, borderRadius }}
+            className="pointer-events-none absolute inset-0 border border-border z-30"
+          />
+
+          {/* Video host — oversized to crop YT chrome */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute left-1/2 top-1/2 h-[110%] w-[110%] -translate-x-1/2 -translate-y-1/2">
+              <div ref={playerHostRef} className="h-full w-full" />
+            </div>
+          </div>
+
+          {/* Cinematic overlays — fade with scroll */}
+          <motion.div
+            style={{ opacity: overlayOpacity }}
+            className="pointer-events-none absolute inset-0"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/55" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/55 via-transparent to-background/55" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_30%,_rgba(0,0,0,0.55)_100%)]" />
+          </motion.div>
+
+          {/* Unmute button */}
+          {!unmuted && (
+            <button
+              onClick={handleUnmute}
+              className="absolute right-3 top-3 sm:right-5 sm:top-5 z-20 flex items-center gap-2 rounded-full border border-primary/40 bg-background/60 px-3 py-1.5 sm:px-4 sm:py-2 backdrop-blur-md font-mono text-[10px] sm:text-xs uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors"
+              aria-label="Activeaza sunetul"
+            >
+              <span aria-hidden>🔊</span>
+              <span className="hidden sm:inline">Activeaza sunetul</span>
+              <span className="sm:hidden">Sunet</span>
+            </button>
+          )}
+
+          {/* Countdown card overlay — fades & slides up on scroll */}
+          <motion.div
+            style={{
+              opacity: countdownOpacity,
+              y: countdownY,
+              scale: countdownScale,
+            }}
+            className="absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6"
+          >
+            <div className="relative w-full max-w-[720px] rounded-2xl border border-border/60 bg-background/40 px-5 py-7 sm:px-10 sm:py-10 md:px-14 md:py-12 backdrop-blur-2xl">
+              <span className="pointer-events-none absolute top-[8px] left-[8px] h-3 w-3 border-t border-l border-primary/70" />
+              <span className="pointer-events-none absolute top-[8px] right-[8px] h-3 w-3 border-t border-r border-primary/70" />
+              <span className="pointer-events-none absolute bottom-[8px] left-[8px] h-3 w-3 border-b border-l border-primary/70" />
+              <span className="pointer-events-none absolute bottom-[8px] right-[8px] h-3 w-3 border-b border-r border-primary/70" />
+
+              <div className="text-center">
+                <div
+                  className="font-display text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.3em] text-primary/90 mb-4 md:mb-6"
+                  style={{ fontWeight: 400 }}
+                >
+                  Cat mai e pana intram in oras
+                </div>
+                <div className="flex items-end justify-center gap-2 sm:gap-5 md:gap-9">
+                  <CountdownUnit value={time.d} label="Zile" locked />
+                  <span className="font-display text-2xl sm:text-3xl md:text-4xl text-primary/30 pb-3 sm:pb-4 md:pb-5">/</span>
+                  <CountdownUnit value={time.h} label="Ore" />
+                  <span className="font-display text-2xl sm:text-3xl md:text-4xl text-primary/30 pb-3 sm:pb-4 md:pb-5">/</span>
+                  <CountdownUnit value={time.m} label="Minute" />
+                  <span className="font-display text-2xl sm:text-3xl md:text-4xl text-primary/30 pb-3 sm:pb-4 md:pb-5">/</span>
+                  <CountdownUnit value={time.s} label="Secunde" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 // â”€â”€ Main Teaser Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function TeaserPage() {
-  const [revealed, setRevealed] = useState(0);
   const [time, setTime] = useState(() => getParts(TARGET - Date.now()));
+  const heroRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const id = setInterval(() => setTime(getParts(TARGET - Date.now())), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const done = revealed >= TOTAL_CHARS;
-  const progress = Math.round((revealed / TOTAL_CHARS) * 100);
-
-  let cursor = -1;
-  const slots = SLOTS.map((char) => {
-    if (char === " " || char === ":") return { char, idx: -1 };
-    cursor += 1;
-    return { char, idx: cursor };
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
   });
+  const heroOpacity = useTransform(heroProgress, [0, 0.7], [1, 0]);
+  const heroY = useTransform(heroProgress, [0, 1], ["0%", "-18%"]);
+  const heroScale = useTransform(heroProgress, [0, 1], [1, 0.94]);
 
   return (
     <div className="relative min-h-screen">
@@ -181,7 +396,18 @@ export function TeaserPage() {
       </div>
 
       {/* â”€â”€ Page content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10 pt-24 sm:pt-32 md:pt-40 pb-16 md:pb-24">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 md:px-10 pb-16 md:pb-24">
+
+        {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <motion.section
+          ref={heroRef}
+          style={{
+            opacity: heroOpacity,
+            y: heroY,
+            scale: heroScale,
+          }}
+          className="relative min-h-screen flex flex-col justify-center pt-24 sm:pt-32 md:pt-32"
+        >
 
         {/* â”€â”€ Main Heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <motion.div
@@ -284,194 +510,109 @@ export function TeaserPage() {
           transition={{ delay: 1.05, duration: 0.8 }}
           className="font-display text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl leading-snug mb-6 sm:mb-8 md:mb-12"
         >
-          Decripteaza cuvintele de mai jos pentru a afla platforma pe care va fi lansat serverul si pregateste-te pentru primul contact cu orasul{" "}
-          <span className="text-gradient">ILUMA</span>.
+          Un oras intreg te asteapta. <span className="text-gradient">ILUMA</span> vine pe{" "}
+          <span className="text-primary">RAGE:MP</span> — nu rata startul.
         </motion.p>
 
-        {/* â”€â”€ Cipher Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <motion.section
-          id="cipher"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 1 }}
-          className="relative"
-        >
-          {/* Terminal panel header */}
-          <RevealBlock className="mb-4 md:mb-8" amount={0.4}>
-            <div>
-              <div className="micro-label flex items-center gap-3 mb-4 text-primary uppercase">
-                <RevealText splitBy="char" stagger={0.02} duration={0.6}>
-                  INSTRUCTIUNI DE DECRIPTARE
-                </RevealText>
-              </div>
-              <RevealText
-                as="p"
-                stagger={0.02}
-                duration={0.7}
-                delay={0.15}
-                className="font-display text-sm sm:text-base md:text-lg text-muted-foreground max-w-sm"
-              >
-                Apasa pe fiecare element disponibil in ordine pentru a decripta cuvantul si a afla platforma serverului.
-              </RevealText>
-            </div>
-          </RevealBlock>
-
-          {/* â”€â”€ Glyph grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 py-8 md:py-12">
-            {slots.map((slot, i) => {
-              if (slot.char === " ")
-                return <div key={i} className="w-3 sm:w-6 md:w-12" />;
-              if (slot.char === ":")
-                return (
-                  <div
-                    key={i}
-                    className="flex h-20 w-4 select-none items-center justify-center sm:h-24 sm:w-6 md:h-36 md:w-8 lg:h-40 lg:w-10"
-                  >
-                    <span className="font-display text-3xl text-primary/85 sm:text-4xl md:text-5xl lg:text-6xl">:</span>
-                  </div>
-                );
-              const state =
-                slot.idx < revealed
-                  ? "revealed"
-                  : slot.idx === revealed
-                    ? "next"
-                    : "locked";
-              return (
-                <Glyph
-                  key={i}
-                  char={slot.char}
-                  state={state}
-                  onClick={() => state === "next" && setRevealed((r) => r + 1)}
-                />
-              );
-            })}
-          </div>
-
-          {/* â”€â”€ Reveal outcome â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-          <AnimatePresence>
-            {done && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                className="relative mt-16 md:mt-24 w-full"
-              >
-                <div className="pointer-events-none absolute -left-[210px] top-[-270px] z-20 hidden h-[840px] w-[360px] xl:block">
-                  <motion.img
-                    src={imageMid}
-                    alt=""
-                    aria-hidden="true"
-                    initial={{ opacity: 0, y: 60, filter: "blur(20px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) contrast(0.99) brightness(1.01) saturate(1.04)" }}
-                    animate={{
-                      opacity: 0.38,
-                      y: 0,
-                      filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
-                      scale: [1, 1.016, 1],
-                      rotate: [-0.8, 0.8, -0.8],
-                    }}
-                    whileHover={{
-                      scale: 1.04,
-                      opacity: 0.56,
-                      filter: "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
-                    }}
-                    transition={{
-                      opacity: { duration: 1.1, delay: 0.5 },
-                      y: { duration: 1.3, delay: 0.5, ease: [0.22, 1, 0.36, 1] },
-                      filter: { duration: 1.1, delay: 0.5 },
-                      scale: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.8 },
-                      rotate: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.8 },
-                    }}
-                    className="pointer-events-auto h-full w-full object-contain object-bottom"
-                    style={{
-                      maskImage:
-                        "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 10%, black 24%, black 70%, rgba(0,0,0,0.86) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.86) 10%, black 24%, black 76%, rgba(0,0,0,0.86) 90%, transparent 100%)",
-                      WebkitMaskImage:
-                        "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 10%, black 24%, black 70%, rgba(0,0,0,0.86) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.86) 10%, black 24%, black 76%, rgba(0,0,0,0.86) 90%, transparent 100%)",
-                    }}
-                  />
-                </div>
-                <motion.section
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.45, duration: 0.9 }}
-                  className="mx-auto mb-12 md:mb-20 max-w-[1080px] rounded-2xl md:rounded-[2rem] border border-border/50 bg-card/25 p-5 sm:p-8 backdrop-blur-xl md:p-10"
-                >
-                  <div className="grid gap-6 md:gap-10 lg:grid-cols-12">
-                    <div className="lg:col-span-4 flex items-center justify-center lg:justify-start">
-                      <h3
-                        className="font-display text-2xl sm:text-3xl uppercase tracking-tight text-foreground md:text-4xl text-center lg:text-left"
-                        style={{
-                          textShadow: "0 0 18px rgba(16, 250, 223, 0.05)",
-                        }}
-                      >
-                        <span className="bg-gradient-to-b from-white/92 via-white/86 to-white/58 bg-clip-text text-transparent">
-                          ILUMA
-                        </span>{" "}
-                        <span
-                          className="bg-gradient-to-b from-[#b8fff0]/80 via-[#10FADF]/88 to-[#65ffe5]/72 bg-clip-text text-transparent"
-                          style={{
-                            filter: "drop-shadow(0 0 8px rgba(16, 250, 223, 0.1))",
-                          }}
-                        >
-                          RAGE:MP
-                        </span>
-                      </h3>
-                    </div>
-                    <RevealBlock className="space-y-4 md:space-y-5 lg:col-span-8" amount={0.2} delay={0.15}>
-                      <p className="text-sm sm:text-base leading-relaxed text-foreground/88">
-                        <span className="text-gradient">ILUMA</span> Roleplay este construit ca o experiență cinematografică de oraș viu, iar mutarea pe
-                        <span className="text-primary"> RAGE Multiplayer</span> înseamnă mai multă stabilitate, sisteme moderne
-                        și mai mult spațiu pentru povești care chiar contează.
-                      </p>
-                      <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
-                        De aproape un an, echipa noastră dezvoltă un gamemode unic, creat pentru a aduce ceva nou comunității
-                        de roleplay din România. Accentul este pus pe realism, progres autentic și o comunitate matură, unde
-                        fiecare alegere și fiecare oră petrecută pe server au valoare.
-                      </p>
-                      <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
-                        Tot ce vezi aici este doar începutul: economie persistentă, interacțiuni gândite pentru roleplay
-                        serios și un univers pregătit să crească în jurul jucătorilor.{" "}
-                        <a
-                          href="https://discord.gg/iluma"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
-                        >
-                          Urmărește Discord-ul
-                        </a>{" "}
-                        pentru a afla data deschiderii serverului.
-                      </p>
-                    </RevealBlock>
-                  </div>
-                </motion.section>
-                <HowToPlay />
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55, duration: 0.9 }}
-                  className="mt-16 md:mt-32 border-t border-border/50 pt-8 md:pt-10"
-                >
-                  <div className="flex justify-center">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="font-display text-xs sm:text-sm uppercase tracking-[0.25em] text-muted-foreground mb-4 md:mb-6 px-4" style={{ fontWeight: 400 }}>
-                        Timp de așteptare până la deschiderea serverului
-                      </div>
-                      <div className="flex items-end justify-center gap-3 sm:gap-6 md:gap-10">
-                        <CountdownUnit value={time.d} label="Zile" locked />
-                        <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
-                        <CountdownUnit value={time.h} label="Ore" />
-                        <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
-                        <CountdownUnit value={time.m} label="Minute" />
-                        <span className="font-display text-2xl sm:text-3xl text-primary/30 pb-4 sm:pb-5">/</span>
-                        <CountdownUnit value={time.s} label="Secunde" />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.section>
+
+        {/* â”€â”€ Video + Countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <VideoCountdown time={time} />
+
+        {/* â”€â”€ Server Info + Guide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <div className="relative w-full -mt-[24vh] md:-mt-[28vh] z-20">
+          <div className="pointer-events-none absolute -left-[210px] top-[-270px] z-20 hidden h-[840px] w-[360px] xl:block">
+            <motion.img
+              src={imageMid}
+              alt=""
+              aria-hidden="true"
+              initial={{ opacity: 0, y: 60, filter: "blur(20px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) contrast(0.99) brightness(1.01) saturate(1.04)" }}
+              whileInView={{
+                opacity: 0.38,
+                y: 0,
+                filter: "blur(0.6px) drop-shadow(0 0 8px rgba(89, 222, 191, 0.15)) drop-shadow(0 0 20px rgba(89, 222, 191, 0.08)) contrast(0.99) brightness(1.01) saturate(1.04)",
+                scale: [1, 1.016, 1],
+                rotate: [-0.8, 0.8, -0.8],
+              }}
+              viewport={{ once: true, amount: 0.15 }}
+              whileHover={{
+                scale: 1.04,
+                opacity: 0.56,
+                filter: "drop-shadow(0 0 20px rgba(89, 222, 191, 0.3)) drop-shadow(0 0 46px rgba(89, 222, 191, 0.18)) brightness(1.11) saturate(1.14)",
+              }}
+              transition={{
+                opacity: { duration: 1.1, delay: 0.3 },
+                y: { duration: 1.3, delay: 0.3, ease: [0.22, 1, 0.36, 1] },
+                filter: { duration: 1.1, delay: 0.3 },
+                scale: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
+                rotate: { duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 1.6 },
+              }}
+              className="pointer-events-auto h-full w-full object-contain object-bottom"
+              style={{
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 10%, black 24%, black 70%, rgba(0,0,0,0.86) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.86) 10%, black 24%, black 76%, rgba(0,0,0,0.86) 90%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.9) 10%, black 24%, black 70%, rgba(0,0,0,0.86) 84%, transparent 100%), linear-gradient(to right, transparent 0%, rgba(0,0,0,0.86) 10%, black 24%, black 76%, rgba(0,0,0,0.86) 90%, transparent 100%)",
+              }}
+            />
+          </div>
+          <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.9 }}
+            className="mx-auto mb-12 md:mb-20 max-w-[1080px] rounded-2xl md:rounded-[2rem] border border-border/50 bg-card/25 p-5 sm:p-8 backdrop-blur-xl md:p-10"
+          >
+            <div className="grid gap-6 md:gap-10 lg:grid-cols-12">
+              <div className="lg:col-span-4 flex items-center justify-center lg:justify-start">
+                <h3
+                  className="font-display text-2xl sm:text-3xl uppercase tracking-tight text-foreground md:text-4xl text-center lg:text-left"
+                  style={{
+                    textShadow: "0 0 18px rgba(16, 250, 223, 0.05)",
+                  }}
+                >
+                  <span className="bg-gradient-to-b from-white/92 via-white/86 to-white/58 bg-clip-text text-transparent">
+                    ILUMA
+                  </span>{" "}
+                  <span
+                    className="bg-gradient-to-b from-[#b8fff0]/80 via-[#10FADF]/88 to-[#65ffe5]/72 bg-clip-text text-transparent"
+                    style={{
+                      filter: "drop-shadow(0 0 8px rgba(16, 250, 223, 0.1))",
+                    }}
+                  >
+                    RAGE:MP
+                  </span>
+                </h3>
+              </div>
+              <RevealBlock className="space-y-4 md:space-y-5 lg:col-span-8" amount={0.2} delay={0.15}>
+                <p className="text-sm sm:text-base leading-relaxed text-foreground/88">
+                  <span className="text-gradient">ILUMA</span> Roleplay este construit ca o experiență cinematografică de oraș viu, iar mutarea pe
+                  <span className="text-primary"> RAGE Multiplayer</span> înseamnă mai multă stabilitate, sisteme moderne
+                  și mai mult spațiu pentru povești care chiar contează.
+                </p>
+                <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
+                  De aproape un an, echipa noastră dezvoltă un gamemode unic, creat pentru a aduce ceva nou comunității
+                  de roleplay din România. Accentul este pus pe realism, progres autentic și o comunitate matură, unde
+                  fiecare alegere și fiecare oră petrecută pe server au valoare.
+                </p>
+                <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground md:text-[15px]">
+                  Tot ce vezi aici este doar începutul: economie persistentă, interacțiuni gândite pentru roleplay
+                  serios și un univers pregătit să crească în jurul jucătorilor.{" "}
+                  <a
+                    href="https://discord.gg/iluma"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                  >
+                    Urmărește Discord-ul
+                  </a>{" "}
+                  pentru a afla data deschiderii serverului.
+                </p>
+              </RevealBlock>
+            </div>
+          </motion.section>
+          <HowToPlay />
+        </div>
 
         {/* â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <footer className="mt-20 pt-8 border-t border-border/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
